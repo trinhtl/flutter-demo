@@ -1,0 +1,44 @@
+version: '3.5'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: crud
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5433:5432"
+    network_mode: host
+    restart: unless-stopped
+
+  backend:
+    container_name: backend
+    build:
+      context: backend
+    environment:
+      DB_URL: jdbc:postgresql://localhost:5433/crud
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret
+    ports:
+      - "8080:8080"
+    network_mode: host
+    restart: unless-stopped
+
+  flutter-app:
+    build:
+      context: crud_app
+    container_name: flutter_app
+    volumes:
+      - crud_app:/app
+    working_dir: /app
+    command: flutter run -d iOS
+    network_mode: "host"  # Allows Flutter to communicate with the iOS Simulator
+
+volumes:
+  postgres:
+  crud_app:
